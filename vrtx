@@ -8,6 +8,7 @@ set -eo pipefail
 # Find absolute path of vertex home
 VERTEX_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export VERTEX_HOME
+export PATH="${VERTEX_HOME}/bin:${PATH}"
 
 # Load core configuration paths
 export VERTEX_STATE_DIR="${VERTEX_HOME}/state"
