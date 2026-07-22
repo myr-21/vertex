@@ -25,7 +25,7 @@ source "${VERTEX_HOME}/lib/logger.sh"
 source "${VERTEX_HOME}/lib/validation.sh"
 
 show_help() {
-    echo -e "${COLOR_BLUE}Vertex - A Lightweight Local Container Orchestration & Platform Engineering Toolkit${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Vertex - A Lightweight Local Platform-as-a-Service (PaaS)${COLOR_RESET}"
     echo
     echo -e "${COLOR_YELLOW}Usage:${COLOR_RESET}"
     echo "  vrtx [command] [arguments]"

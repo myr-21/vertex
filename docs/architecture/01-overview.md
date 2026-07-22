@@ -1,6 +1,6 @@
 # Vertex Architecture Overview
 
-Vertex is a lightweight local container orchestration platform. This document outlines the standard conventions, schemas, and library contracts.
+Vertex is a lightweight local Platform-as-a-Service (PaaS) that provisions and manages containerized applications using a transactional control plane built in Bash. This document outlines the standard conventions, schemas, and library contracts.
 
 ## 1. Unified Library Contract (`lib/*`)
 Every helper module under `lib/` adheres to these rules:

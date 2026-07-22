@@ -1,8 +1,8 @@
 # Vertex
 
-**Vertex** — *A Lightweight Local Container Orchestration & Platform Engineering Toolkit*
+**Vertex** — *A Lightweight Local Platform-as-a-Service (PaaS)*
 
-Vertex is a production-quality, open-source platform engineering toolkit that provides a lightweight local container orchestration environment inspired by Heroku, Render, Docker Swarm, and Kubernetes. It enables developers to deploy, manage, monitor, and automate containerized applications locally while demonstrating clean software architecture, state management, transactions, and DevOps concepts.
+Vertex is a lightweight local Platform-as-a-Service (PaaS) that provisions and manages containerized applications using a transactional control plane built in Bash. It enables developers to deploy, manage, monitor, and automate containerized applications locally while demonstrating clean software architecture, state management, transactions, and DevOps concepts.
 
 ---
 
