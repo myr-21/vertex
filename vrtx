@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+
+# Vertex - CLI Command Launcher
+# Executable: vrtx
+
+set -eo pipefail
+
+# Find absolute path of vertex home
+VERTEX_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export VERTEX_HOME
+
+# Load core configuration paths
+export VERTEX_STATE_DIR="${VERTEX_HOME}/state"
+export VERTEX_RUNTIME_DIR="${VERTEX_HOME}/runtime"
+export VERTEX_LOGS_DIR="${VERTEX_HOME}/logs"
+
+# Ensure runtime directories exist
+mkdir -p "${VERTEX_RUNTIME_DIR}"/{locks,pid,cache,generated,compose,proxy}
+mkdir -p "${VERTEX_STATE_DIR}"/{desired,current,history}
+mkdir -p "${VERTEX_LOGS_DIR}"/{platform,applications,transactions}
+
+# Source base libraries
+source "${VERTEX_HOME}/lib/logger.sh"
+source "${VERTEX_HOME}/lib/validation.sh"
+
+show_help() {
+    echo -e "${COLOR_BLUE}Vertex - A Lightweight Local Container Orchestration & Platform Engineering Toolkit${COLOR_RESET}"
+    echo
+    echo -e "${COLOR_YELLOW}Usage:${COLOR_RESET}"
+    echo "  vrtx [command] [arguments]"
+    echo
+    echo -e "${COLOR_YELLOW}Commands:${COLOR_RESET}"
+    echo "  deploy <app>     Deploy an application"
+    echo "  destroy <app>    Destroy a running application"
+    echo "  restart <app>    Restart an application"
+    echo "  stop <app>       Stop an app container"
+    echo "  start <app>      Start an app container"
+    echo "  status           Show statuses of all deployed applications"
+    echo "  logs <app>       Display logs for an application"
+    echo "  doctor           Run diagnostic verification tests"
+    echo "  monitor          Deploy and show monitoring metrics dashboard"
+    echo "  backup <app>     Create app backup archive"
+    echo "  restore <app>    Restore app backup from archives"
+    echo "  apply -f <file>  Deploy using an application manifest"
+    echo "  version          Print Vertex version details"
+    echo
+    echo -e "${COLOR_YELLOW}Aliases:${COLOR_RESET}"
+    echo "  ps, ls          Aliases for status"
+    echo "  rm              Alias for destroy"
+    echo "  up              Alias for deploy/start"
+    echo "  down            Alias for stop/destroy"
+}
+
+# Version checking
+if [[ "$1" == "version" || "$1" == "-v" || "$1" == "--version" ]]; then
+    echo "Vertex v1.0.0 (Local Container Orchestration Toolkit)"
+    exit 0
+fi
+
+if [[ -z "$1" || "$1" == "help" || "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
+COMMAND="$1"
+shift
+
+# Command Routing and Aliases
+case "$COMMAND" in
+    ps|ls)
+        COMMAND="status"
+        ;;
+    rm)
+        COMMAND="destroy"
+        ;;
+    up)
+        COMMAND="deploy"
+        ;;
+    down)
+        COMMAND="stop"
+        ;;
+esac
+
+# Locate command script
+COMMAND_SCRIPT="${VERTEX_HOME}/commands/${COMMAND}.sh"
+
+if [[ ! -f "$COMMAND_SCRIPT" ]]; then
+    log_error "Unknown command: ${COMMAND}"
+    show_help
+    exit 1
+fi
+
+# Acquire operational lock for state-modifying operations
+LOCK_FILE="${VERTEX_RUNTIME_DIR}/locks/global.lock"
+
+# List of operations requiring a lock
+if [[ "$COMMAND" =~ ^(deploy|destroy|restart|stop|start|backup|restore|apply)$ ]]; then
+    # Try opening lock file descriptor
+    exec 200>"$LOCK_FILE"
+    if ! flock -n 200; then
+        log_error "Another deployment/infrastructure operation is in progress. Please wait."
+        exit 1
+    fi
+    # Store PID
+    echo $$ > "$LOCK_FILE"
+fi
+
+# Dispatch execution to command module
+export VERTEX_COMMAND_CONTEXT="true"
+bash "$COMMAND_SCRIPT" "$@"

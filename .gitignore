@@ -1,0 +1,52 @@
+# Vertex Runtime Files
+runtime/cache/*
+runtime/generated/*
+runtime/compose/*
+runtime/proxy/*
+runtime/pid/*
+runtime/locks/*
+
+# Keep directory structure but ignore contents
+!runtime/cache/.gitkeep
+!runtime/generated/.gitkeep
+!runtime/compose/.gitkeep
+!runtime/proxy/.gitkeep
+!runtime/pid/.gitkeep
+!runtime/locks/.gitkeep
+
+# State Management actual and historical data
+state/current/*
+state/history/*
+!state/current/.gitkeep
+!state/history/.gitkeep
+
+# Application Backups
+backups/*
+!backups/.gitkeep
+
+# Logs
+logs/platform/*
+logs/applications/*
+logs/transactions/*
+!logs/platform/.gitkeep
+!logs/applications/.gitkeep
+!logs/transactions/.gitkeep
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Temporary/Cache files
+tmp/
+temp/
+*.log
+*.tmp
