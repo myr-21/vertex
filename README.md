@@ -11,7 +11,11 @@ Vertex is a lightweight local Platform-as-a-Service (PaaS) that provisions and m
 Before running Vertex, ensure you have the following installed on your machine:
 - **Bash** shell (WSL 2 on Windows, macOS Terminal, or Linux).
 - **Docker Engine** (running daemon). On Windows, make sure **Docker Desktop** is running and WSL integration is active.
-- **jq** command-line JSON processor.
+- **jq** command-line JSON processor:
+  - **Windows (Winget)**: `winget install jqlang.jq`
+  - **macOS (Homebrew)**: `brew install jq`
+  - **Ubuntu/Debian**: `sudo apt-get install -y jq`
+  - **CentOS/RHEL**: `sudo dnf install -y jq`
 
 ---
 
