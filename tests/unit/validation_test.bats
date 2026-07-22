@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-    source "${BATS_TEST_DIRNAME}/../lib/validation.sh"
+    export VERTEX_HOME="${BATS_TEST_DIRNAME}/../.."
+    source "${VERTEX_HOME}/lib/validation.sh"
 }
 
 @test "validate_app_name accepts valid names" {
