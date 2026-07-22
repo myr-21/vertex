@@ -32,6 +32,15 @@ executor_execute() {
     local app_name
     app_name=$(json_get "$plan_file" ".application")
 
+    local desired_file
+    desired_file=$(state_get_desired "$app_name")
+    local image="nginx:latest"
+    local port="80"
+    if [[ "$action" == "deploy" && -f "$desired_file" ]]; then
+        image=$(json_get "$desired_file" ".image")
+        port=$(json_get "$desired_file" ".ports[0]")
+    fi
+
     # Start transaction tracking
     transaction_begin "$tx_id"
     before_execute "tx_id=${tx_id}"
@@ -71,8 +80,7 @@ executor_execute() {
                 fi
                 ;;
             create_container)
-                # Mock create container
-                if resource_create_container "$app_name" "nginx:latest" "80" >/dev/null; then
+                if resource_create_container "$app_name" "$image" "$port" >/dev/null; then
                     transaction_push "$step_rollback" "$app_name"
                     success=true
                 fi
@@ -94,9 +102,39 @@ executor_execute() {
                 ;;
             update_state)
                 if [[ "$action" == "deploy" ]]; then
-                    # Write mock schema configuration state
+                    # Dynamic state inspection
+                    local con_id
+                    con_id=$(docker inspect "$app_name" --format '{{.Id}}' 2>/dev/null || echo "unknown")
+                    local con_status
+                    con_status=$(docker inspect "$app_name" --format '{{.State.Status}}' 2>/dev/null || echo "unknown")
+                    local con_health
+                    con_health=$(docker inspect "$app_name" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' 2>/dev/null || echo "unknown")
+                    local timestamp
+                    timestamp=$(date -u "+%Y-%m-%dT%H:%M:%SZ")
+
+                    # Compile state JSON matching Phase 2 schema requirements
                     local schema
-                    schema="{\"name\":\"${app_name}\",\"image\":\"nginx:latest\",\"ports\":[80]}"
+                    schema=$(cat <<EOF
+{
+  "schema_version": ${VERTEX_STATE_SCHEMA_VERSION},
+  "id": "${con_id}",
+  "name": "${app_name}",
+  "template": "custom",
+  "image": "${image}",
+  "version": "latest",
+  "status": "${con_status}",
+  "health": "${con_health}",
+  "ports": ["${port}"],
+  "volumes": ["${app_name}"],
+  "networks": ["${app_name}"],
+  "dependencies": [],
+  "created_at": "${timestamp}",
+  "updated_at": "${timestamp}",
+  "last_deployment": "${timestamp}",
+  "last_backup": ""
+}
+EOF
+)
                     state_create_app "$app_name" "$schema"
                     transaction_push "$step_rollback" "$app_name"
                     success=true

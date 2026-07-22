@@ -43,6 +43,19 @@ planner_plan_deploy() {
         return $?
     fi
 
+    # Write desired configuration
+    local desired_file
+    desired_file=$(state_get_desired "$app_name")
+    mkdir -p "$(dirname "$desired_file")"
+    cat <<EOF > "$desired_file"
+{
+  "schema_version": ${VERTEX_STATE_SCHEMA_VERSION},
+  "name": "${app_name}",
+  "image": "${image}",
+  "ports": ["${port}"]
+}
+EOF
+
     local tx_id
     tx_id=$(planner_generate_tx_id)
     local generated_at
