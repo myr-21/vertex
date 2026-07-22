@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Vertex - Project-Wide Constants
+
+export VERTEX_PLAN_VERSION=1
+export VERTEX_STATE_SCHEMA_VERSION=1
+
+export VERTEX_STATE_DIR="${VERTEX_HOME}/state"
+export VERTEX_RUNTIME_DIR="${VERTEX_HOME}/runtime"
+export VERTEX_LOGS_DIR="${VERTEX_HOME}/logs"
+
+export VERTEX_REGISTRY_FILE="${VERTEX_STATE_DIR}/registry.json"
+export VERTEX_DEFAULT_NETWORK="vertex-network"
+
+# Exit Codes
+export EXIT_SUCCESS=0
+export EXIT_FAILURE=1
+export EXIT_INVALID_ARGS=2
+export EXIT_VALIDATION_FAILED=3
+export EXIT_RESOURCE_FAILURE=4
+export EXIT_TX_ROLLBACK=5
+export EXIT_UNSUPPORTED_PLAN_VERSION=6
