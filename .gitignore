@@ -5,6 +5,7 @@ runtime/compose/*
 runtime/proxy/*
 runtime/pid/*
 runtime/locks/*
+runtime/plans/*
 
 # Keep directory structure but ignore contents
 !runtime/cache/.gitkeep
@@ -13,6 +14,7 @@ runtime/locks/*
 !runtime/proxy/.gitkeep
 !runtime/pid/.gitkeep
 !runtime/locks/.gitkeep
+!runtime/plans/.gitkeep
 
 # State Management actual and historical data
 state/current/*
