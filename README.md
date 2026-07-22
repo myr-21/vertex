@@ -6,36 +6,25 @@ Vertex is a production-quality, open-source platform engineering toolkit that pr
 
 ---
 
-## Architecture Overview
+## Phase 2 Core Runtime Architecture
 
-Vertex decouples operations using a **Control Plane** and a **Resource Manager** to avoid raw/direct container engine mutations:
+Vertex implements a strict Planner-Executor transaction loop to coordinate resources safely:
 
 ```
-                       User
-                         │
-                    vrtx CLI (vrtx)
-                         │
-                 Argument Parser
-                         │
-               Command Dispatcher (commands/*)
-                         │
-            Validation / Permission Layer
-                         │
-               Control Plane (engine/*)
-                         │
-               Planner (planner.sh)
-                         │
-               Execution Plan
-                         │
-               Executor (executor.sh)
-                         │
-               Resource Manager (lib/resource.sh)
-                         │
-       ┌─────────────────┼─────────────────┐
-       ▼                                   ▼
-  State Engine                        Docker Engine
-(state/registry.json)              (lib/docker.sh)
+CLI ──> Command Module ──> Orchestrator ──> Planner ──> Execution Plan (JSON)
+                                                           │
+                                                           ▼
+SUCCESS <── State Engine <── Resource Manager <── Executor <── Transaction Manager (LIFO Rollback)
 ```
+
+### Components
+1. **JSON Library (`lib/json.sh`)**: Interacts with JSON schemas using standard `jq` path expressions.
+2. **State Engine (`lib/state.sh`)**: The only module allowed to read or write state data inside `state/`.
+3. **Resource Manager (`lib/resource.sh`)**: Single adapter layer abstracting infrastructure commands.
+4. **Transaction Manager (`lib/transaction.sh`)**: Coordinates steps execution and pushes rollback actions onto a LIFO stack.
+5. **Planner (`engine/planner.sh`)**: Computes required forward steps and outputs plans inside `runtime/plans/<tx-id>.json`.
+6. **Executor (`engine/executor.sh`)**: Executes plan JSON arrays sequentially and triggers LIFO rollback on failures.
+7. **Orchestrator (`engine/orchestrator.sh`)**: Coordinates workflow steps from thin command modules.
 
 ---
 
@@ -44,33 +33,18 @@ Vertex decouples operations using a **Control Plane** and a **Resource Manager**
 ```
 vertex/
 ├── bin/            # CLI binary entry point (symlink to vrtx)
-├── commands/       # Subcommand modules (deploy.sh, destroy.sh, doctor.sh, etc.)
-├── engine/         # Decoupled control plane modules
-├── lib/            # Shared libraries (logger.sh, validation.sh, table.sh, etc.)
+├── commands/       # Subcommand modules (deploy.sh, destroy.sh, status.sh)
+├── engine/         # Control plane modules (planner.sh, executor.sh, orchestrator.sh)
+├── lib/            # Shared libraries (json.sh, state.sh, transaction.sh, error.sh, constants.sh)
 ├── state/          # Partitioned state directories (desired/, current/, history/)
-├── runtime/        # Generated runtime configs and lock files
+├── runtime/        # Generated runtime configs, locks, and plans/
 ├── templates/      # Base templates with lifecycle hooks
 ├── compose/        # Core platform service definitions
 ├── backups/        # Compressed archive files for backups
 ├── logs/           # Organized log files (platform/, applications/, transactions/)
-├── tests/          # Bats test suites
+├── tests/          # Bats test suites (unit/ and integration/)
 └── docs/           # System design & architecture guides
 ```
-
----
-
-## Project Status (Release Candidate v0.1.0)
-
-- **Completed Phase 1 (Foundation)**:
-  - Command parsing, dispatcher routing, and concurrency locking checks.
-  - Multi-level logging library (`logger.sh`), strict validations (`validation.sh`), and tabular printer (`table.sh`).
-  - Automated installers (`install.sh`, `uninstall.sh`) and architecture records (ADRs).
-  - Validation test suites utilizing the Bats testing framework.
-- **Planned Phases (2 to 6)**:
-  - Docker Resource Manager and deployment transitions with automated transaction rollback.
-  - Custom manifest engine reconciler (`vrtx apply app.yaml`) and dynamic Nginx proxy.
-  - Prometheus/Grafana operations stack, logging, diagnostic reports (`vrtx doctor`), backups.
-  - Interactive Terminal TUI dashboard, Kubernetes manifest export.
 
 ---
 
@@ -79,7 +53,7 @@ vertex/
 To install Vertex locally:
 
 ```bash
-git clone https://github.com/your-username/vertex.git
+git clone https://github.com/myr-21/vertex.git
 cd vertex
 ./install.sh
 ```
@@ -95,14 +69,19 @@ Ensure `~/.local/bin` is added to your environment `PATH` to execute `vrtx` glob
 vrtx version
 ```
 
-### Show Application Dashboard (Planned)
+### Show Application Dashboard
 ```bash
 vrtx status
 ```
 
-### Deploy Template (Planned)
+### Deploy Application
 ```bash
-vrtx deploy nginx
+vrtx deploy nginx-test
+```
+
+### Destroy Application
+```bash
+vrtx destroy nginx-test
 ```
 
 ---
