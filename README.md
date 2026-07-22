@@ -6,27 +6,6 @@ Vertex is a lightweight local Platform-as-a-Service (PaaS) that provisions and m
 
 ---
 
-## Phase 3 Architecture: Docker Integration
-
-Vertex integrates the native `docker` CLI tool inside the unified **Resource Manager** abstraction:
-
-```
-CLI ──> Command Module ──> Orchestrator ──> Planner ──> Execution Plan (JSON)
-                                                           │
-                                                           ▼
-SUCCESS <── State Engine <── Resource Manager <── Executor <── Transaction Manager (LIFO Rollback)
-                                   │
-                                   ▼
-                              Docker CLI
-```
-
-### Components
-1. **Resource Manager (`lib/resource.sh`)**: Exposes container, network, and volume actions (`resource_action`). It verifies image presence (pulls if missing), checks port bindings on the host, and inspects container metadata.
-2. **State Engine (`lib/state.sh`)**: Serializes verified docker parameters directly from inspect output into `state/current/` config JSONs.
-3. **Transaction Manager (`lib/transaction.sh`)**: Intercepts step failures to invoke LIFO rollback steps, cleanly deleting spawned containers, networks, and volumes.
-
----
-
 ## Prerequisites
 
 Before running Vertex, ensure you have the following installed on your machine:
@@ -52,22 +31,49 @@ Ensure `~/.local/bin` is added to your environment `PATH` to run `vrtx` globally
 
 ## CLI Examples
 
-### Print Version Check
+### Example Session
+
+```bash
+$ ./vrtx deploy webserver nginx:alpine 8080
+
+ℹ Deploying application: webserver (Tx: tx-20260722-135647-adzCxu)
+✔ Deployment of webserver completed successfully!
+
+$ ./vrtx status
+
+APP          STATUS    IMAGE          PORT   
+---------------------------------------------
+webserver    running   nginx:alpine   8080   
+
+$ curl -I http://localhost:8080
+
+HTTP/1.1 200 OK
+Server: nginx/1.27.4
+
+$ ./vrtx destroy webserver
+
+ℹ Destroying application: webserver (Tx: tx-20260722-135704-5q8M3g)
+✔ Application webserver destroyed successfully.
+```
+
+### Command Reference
+
+#### Print Version Check
 ```bash
 vrtx version
 ```
 
-### Show Application Dashboard
+#### Show Application Dashboard
 ```bash
 vrtx status
 ```
 
-### Deploy Template
+#### Deploy Template
 ```bash
 vrtx deploy nginx-test nginx:alpine 8080
 ```
 
-### Destroy Template
+#### Destroy Template
 ```bash
 vrtx destroy nginx-test
 ```
@@ -84,10 +90,21 @@ If you receive the error:
 
 ---
 
-## Contributing
+## Phase 3 Architecture: Docker Integration
 
-We welcome contributions! Please review our specifications before opening pull requests.
+Vertex integrates the native `docker` CLI tool inside the unified **Resource Manager** abstraction:
 
-## License
+```
+CLI ──> Command Module ──> Orchestrator ──> Planner ──> Execution Plan (JSON)
+                                                           │
+                                                           ▼
+SUCCESS <── State Engine <── Resource Manager <── Executor <── Transaction Manager (LIFO Rollback)
+                                   │
+                                   ▼
+                              Docker CLI
+```
 
-This project is licensed under the MIT License.
+### Components
+1. **Resource Manager (`lib/resource.sh`)**: Exposes container run, network creation, volume allocation, and status checks.
+2. **State Engine (`lib/state.sh`)**: Serializes verified docker parameters directly from inspect output into `state/current/` config JSONs.
+3. **Transaction Manager (`lib/transaction.sh`)**: Intercepts step failures to invoke LIFO rollback steps, cleanly deleting spawned containers, networks, and volumes.
