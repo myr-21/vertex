@@ -25,6 +25,22 @@ for ((i=0; i<apps_count; i++)); do
     app_file=$(state_get_current "$app_name")
 
     if [[ -f "$app_file" ]]; then
+        # Cross-check Docker reality
+        active_status="stopped"
+        if command -v docker &>/dev/null && docker info &>/dev/null; then
+            if docker ps --format '{{.Names}}' | grep -Eq "^${app_name}$"; then
+                active_status="running"
+            elif docker ps -a --format '{{.Names}}' | grep -Eq "^${app_name}$"; then
+                active_status="exited"
+            fi
+        fi
+
+        # Update state if out of sync
+        current_file_status=$(json_get "$app_file" ".status")
+        if [[ "$current_file_status" != "$active_status" ]]; then
+            json_set "$app_file" ".status" "\"${active_status}\""
+        fi
+
         status=$(json_get "$app_file" ".status")
         image=$(json_get "$app_file" ".image")
         
