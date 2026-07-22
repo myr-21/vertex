@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Wrapper for Windows jq inside WSL/bash with path translation
+args=()
+for arg in "$@"; do
+    if [[ "$arg" =~ ^/ ]]; then
+        # If it starts with / (absolute WSL path)
+        if wslpath -w "$arg" &>/dev/null; then
+            arg=$(wslpath -w "$arg")
+        fi
+    elif [[ -f "$arg" ]]; then
+        # If it's a relative path to a file that exists
+        if wslpath -w "$arg" &>/dev/null; then
+            arg=$(wslpath -w "$arg")
+        fi
+    fi
+    args+=("$arg")
+done
+
+/mnt/c/Users/mayur/AppData/Local/Microsoft/WinGet/Packages/jqlang.jq_Microsoft.Winget.Source_8wekyb3d8bbwe/jq.exe "${args[@]}"
