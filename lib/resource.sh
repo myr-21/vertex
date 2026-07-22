@@ -116,14 +116,21 @@ resource_action() {
                         return $?
                     fi
 
-                    # 4. Start container
+                    # 4. Determine exposed port of image dynamically
+                    local exposed_port
+                    exposed_port=$(docker image inspect "$image" --format '{{range $p, $conf := .Config.ExposedPorts}}{{$p}}{{end}}' 2>/dev/null | cut -d'/' -f1 | head -n 1)
+                    if [[ -z "$exposed_port" ]]; then
+                        exposed_port="80"
+                    fi
+
+                    # 5. Start container
                     # Map default volume to /data, bridge network app-name
                     local container_id
                     container_id=$(docker run -d \
                         --name "$name" \
                         --network "$name" \
                         -v "${name}:/data" \
-                        -p "${port}:${port}" \
+                        -p "${port}:${exposed_port}" \
                         "$image" 2>/dev/null) || {
                         error_msg "${EXIT_RESOURCE_FAILURE}" "Resource" "Failed to run docker container: ${name}"
                         return $?
