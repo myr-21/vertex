@@ -54,7 +54,7 @@ show_help() {
 
 # Version checking
 if [[ "$1" == "version" || "$1" == "-v" || "$1" == "--version" ]]; then
-    echo "Vertex v1.0.0 (Local Container Orchestration Toolkit)"
+    echo "Vertex v0.3.0 (Local Platform-as-a-Service)"
     exit 0
 fi
 

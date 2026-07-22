@@ -10,7 +10,7 @@ COLOR_RED="\033[1;31m"
 COLOR_BLUE="\033[1;34m"
 COLOR_YELLOW="\033[1;33m"
 
-echo -e "${COLOR_BLUE}Installing Vertex - Local Container Orchestration & Platform Engineering Toolkit...${COLOR_RESET}"
+echo -e "${COLOR_BLUE}Installing Vertex - A Lightweight Local Platform-as-a-Service (PaaS)...${COLOR_RESET}"
 
 # Verify required system dependencies
 dependencies=("docker" "jq" "curl" "tar" "flock")
