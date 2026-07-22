@@ -60,22 +60,22 @@ $ ./vrtx destroy webserver
 
 #### Print Version Check
 ```bash
-vrtx version
+./vrtx version
 ```
 
 #### Show Application Dashboard
 ```bash
-vrtx status
+./vrtx status
 ```
 
 #### Deploy Template
 ```bash
-vrtx deploy nginx-test nginx:alpine 8080
+./vrtx deploy nginx-test nginx:alpine 8080
 ```
 
 #### Destroy Template
 ```bash
-vrtx destroy nginx-test
+./vrtx destroy nginx-test
 ```
 
 ---
