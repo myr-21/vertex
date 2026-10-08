@@ -1,0 +1,15 @@
+name: postgres
+image: postgres:17
+ports:
+  - host: 5432
+    container: 5432
+environment:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+volumes:
+  - name: postgres-data
+    mount: /var/lib/postgresql/data
+network:
+  mode: bridge
+healthcheck:
+  enabled: true

@@ -1,0 +1,8 @@
+name: springboot
+image: openjdk:17-jdk-slim
+ports:
+  - host: 8080
+    container: 8080
+command: java -jar app.jar
+network:
+  mode: bridge

@@ -13,16 +13,18 @@ orchestrator_deploy() {
     local app_name="$1"
     local image="$2"
     local port="$3"
+    local template_name="${4:-custom}"
+    local template_json="$5"
 
     before_plan "deploy ${app_name}"
 
     # Step 1: Generate Plan
     local tx_id
-    tx_id=$(planner_plan_deploy "$app_name" "$image" "$port" 2>/dev/null)
+    tx_id=$(planner_plan_deploy "$app_name" "$image" "$port" "$template_name" "$template_json" 2>/dev/null)
     local plan_status=$?
     if [[ "$plan_status" -ne 0 ]]; then
         # If planner printed error, propagate it
-        planner_plan_deploy "$app_name" "$image" "$port" >&2
+        planner_plan_deploy "$app_name" "$image" "$port" "$template_name" "$template_json" >&2
         return "$plan_status"
     fi
 

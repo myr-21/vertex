@@ -20,6 +20,8 @@ planner_plan_deploy() {
     local app_name="$1"
     local image="$2"
     local port="$3"
+    local template_name="${4:-custom}"
+    local template_json="$5"
 
     # Input validations
     if ! validate_app_name "$app_name"; then
@@ -47,14 +49,19 @@ planner_plan_deploy() {
     local desired_file
     desired_file=$(state_get_desired "$app_name")
     mkdir -p "$(dirname "$desired_file")"
-    cat <<EOF > "$desired_file"
+    if [[ -n "$template_json" ]]; then
+        echo "$template_json" | jq ". + {schema_version: ${VERTEX_STATE_SCHEMA_VERSION}, name: \"${app_name}\", template: \"${template_name}\"}" > "$desired_file"
+    else
+        cat <<EOF > "$desired_file"
 {
   "schema_version": ${VERTEX_STATE_SCHEMA_VERSION},
   "name": "${app_name}",
+  "template": "custom",
   "image": "${image}",
   "ports": ["${port}"]
 }
 EOF
+    fi
 
     local tx_id
     tx_id=$(planner_generate_tx_id)

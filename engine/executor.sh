@@ -34,11 +34,24 @@ executor_execute() {
 
     local desired_file
     desired_file=$(state_get_desired "$app_name")
-    local image="nginx:latest"
-    local port="80"
+    local template_name="custom"
     if [[ "$action" == "deploy" && -f "$desired_file" ]]; then
         image=$(json_get "$desired_file" ".image")
-        port=$(json_get "$desired_file" ".ports[0]")
+        
+        # Extract port (handling array of strings vs array of objects)
+        local port_val
+        port_val=$(json_get "$desired_file" ".ports[0].host")
+        if [[ "$port_val" == "null" ]]; then
+            port=$(json_get "$desired_file" ".ports[0]")
+        else
+            port="$port_val"
+        fi
+        
+        # Extract template
+        template_name=$(json_get "$desired_file" ".template")
+        if [[ "$template_name" == "null" ]]; then
+            template_name="custom"
+        fi
     fi
 
     # Start transaction tracking
@@ -80,7 +93,7 @@ executor_execute() {
                 fi
                 ;;
             create_container)
-                if resource_create_container "$app_name" "$image" "$port" >/dev/null; then
+                if resource_create_container "$app_name" "$image" "$port" "$desired_file" >/dev/null; then
                     transaction_push "$step_rollback" "$app_name"
                     success=true
                 fi
@@ -119,7 +132,7 @@ executor_execute() {
   "schema_version": ${VERTEX_STATE_SCHEMA_VERSION},
   "id": "${con_id}",
   "name": "${app_name}",
-  "template": "custom",
+  "template": "${template_name}",
   "image": "${image}",
   "version": "latest",
   "status": "${con_status}",

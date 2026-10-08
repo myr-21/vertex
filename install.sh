@@ -27,6 +27,14 @@ if ! docker compose version &>/dev/null && ! command -v docker-compose &>/dev/nu
     missing+=("docker-compose")
 fi
 
+# Check Python and PyYAML for application templates
+if ! command -v python3 &>/dev/null; then
+    echo -e "${COLOR_YELLOW}Warning: Python 3 is missing. Template support requires it.${COLOR_RESET}"
+elif ! python3 -c "import yaml" &>/dev/null; then
+    echo -e "${COLOR_YELLOW}Warning: PyYAML is missing. Template support requires it.${COLOR_RESET}"
+    echo -e "${COLOR_YELLOW}Install it with: python3 -m pip install pyyaml${COLOR_RESET}"
+fi
+
 if [[ ${#missing[@]} -gt 0 ]]; then
     echo -e "${COLOR_YELLOW}Warning: Missing dependencies: ${missing[*]}${COLOR_RESET}"
     echo -e "${COLOR_YELLOW}Please install them to ensure full Vertex functionality.${COLOR_RESET}"
