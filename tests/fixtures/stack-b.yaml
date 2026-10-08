@@ -1,0 +1,12 @@
+name: stack-b
+services:
+  web:
+    template: nginx
+    ports:
+      - host: 8092
+        container: 80
+  database:
+    template: postgres
+    ports:
+      - host: 5492
+        container: 5432

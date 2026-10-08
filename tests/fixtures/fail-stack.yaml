@@ -1,0 +1,8 @@
+name: fail-stack
+services:
+  database:
+    template: postgres
+  web:
+    image: this-image-does-not-exist:latest
+    depends_on:
+      - database

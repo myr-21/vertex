@@ -16,6 +16,8 @@ Before running Vertex, ensure you have the following installed on your machine:
   - **macOS (Homebrew)**: `brew install jq`
   - **Ubuntu/Debian**: `sudo apt-get install -y jq`
   - **CentOS/RHEL**: `sudo dnf install -y jq`
+- **Python 3** (with PyYAML, required for Application Templates parsing):
+  - Usually pre-installed. Test with `python3 -c "import yaml"`.
 
 ---
 
@@ -56,8 +58,54 @@ Server: nginx/1.27.4
 
 $ ./vrtx destroy webserver
 
+$ ./vrtx destroy webserver
+
 ℹ Destroying application: webserver (Tx: tx-20260722-135704-5q8M3g)
 ✔ Application webserver destroyed successfully.
+```
+
+### Application Templates
+
+Vertex supports YAML templates located in the `templates/` directory.
+
+#### List Available Templates
+```bash
+$ ./vrtx templates
+```
+
+#### View Template Configuration
+```bash
+$ ./vrtx template show postgres
+```
+
+#### Deploy from Template (Shorthand)
+```bash
+$ ./vrtx deploy redis
+```
+
+#### Deploy Multiple Instances of a Template
+```bash
+$ ./vrtx deploy cache-primary --template redis
+$ ./vrtx deploy cache-replica --template redis
+```
+
+### Creating Custom Templates
+To create a custom template, add a `.yaml` file to the `templates/` directory.
+
+```yaml
+name: postgres
+image: postgres:17
+ports:
+  - host: 5432
+    container: 5432
+environment:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+volumes:
+  - name: postgres-data
+    mount: /var/lib/postgresql/data
+network:
+  mode: bridge
 ```
 
 ### Command Reference
@@ -94,7 +142,9 @@ If you receive the error:
 
 ---
 
-## Phase 3 Architecture: Docker Integration
+## Phase 4 Architecture: Application Templates
+
+Vertex integrates Python-based YAML parsing into the Planner to seamlessly merge `templates/*.yaml` files directly into infrastructure-agnostic JSON schemas for the deployment executor without needing heavy third-party container orchestration tooling.
 
 Vertex integrates the native `docker` CLI tool inside the unified **Resource Manager** abstraction:
 

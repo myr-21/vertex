@@ -1,0 +1,17 @@
+name: basic-stack
+services:
+  web:
+    template: nginx
+    ports:
+      - host: 8081
+        container: 80
+  database:
+    template: postgres
+    ports:
+      - host: 5433
+        container: 5432
+  cache:
+    template: redis
+    ports:
+      - host: 6380
+        container: 6379

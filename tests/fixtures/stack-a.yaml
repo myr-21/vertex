@@ -1,0 +1,12 @@
+name: stack-a
+services:
+  web:
+    template: nginx
+    ports:
+      - host: 8091
+        container: 80
+  database:
+    template: postgres
+    ports:
+      - host: 5491
+        container: 5432

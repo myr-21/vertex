@@ -52,3 +52,7 @@ tmp/
 temp/
 *.log
 *.tmp
+
+# Ignore state directory
+state/desired/*
+!state/desired/.gitkeep

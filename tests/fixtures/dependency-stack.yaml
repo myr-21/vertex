@@ -1,0 +1,21 @@
+name: dependency-stack
+services:
+  web:
+    template: nginx
+    depends_on:
+      - database
+    ports:
+      - host: 8082
+        container: 80
+  database:
+    template: postgres
+    depends_on:
+      - cache
+    ports:
+      - host: 5434
+        container: 5432
+  cache:
+    template: redis
+    ports:
+      - host: 6381
+        container: 6379
