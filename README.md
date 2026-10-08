@@ -162,3 +162,27 @@ SUCCESS <── State Engine <── Resource Manager <── Executor <── T
 1. **Resource Manager (`lib/resource.sh`)**: Exposes container run, network creation, volume allocation, and status checks.
 2. **State Engine (`lib/state.sh`)**: Serializes verified docker parameters directly from inspect output into `state/current/` config JSONs.
 3. **Transaction Manager (`lib/transaction.sh`)**: Intercepts step failures to invoke LIFO rollback steps, cleanly deleting spawned containers, networks, and volumes.
+
+---
+
+## Phase 5 Architecture: Declarative Application Manifests
+
+Vertex introduces `vertex.yaml` to deploy multi-service application stacks. The engine calculates a topological dependency graph to guarantee strict LIFO multi-service transaction rollbacks in case of partial deployment failure.
+
+### Deploy a Multi-Service Stack
+Create a `basic-stack.yaml`:
+```yaml
+name: basic-stack
+services:
+  web:
+    template: nginx
+  database:
+    template: postgres
+  cache:
+    template: redis
+```
+
+Deploy the stack:
+```bash
+$ ./vrtx deploy -f basic-stack.yaml
+```
