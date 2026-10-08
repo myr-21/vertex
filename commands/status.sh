@@ -17,7 +17,7 @@ if [[ "$apps_count" -eq 0 ]]; then
 fi
 
 # Build headers and rows
-header="APP"$'\t'"STATUS"$'\t'"IMAGE"$'\t'"PORT"
+header="STACK"$'\t'"SERVICE"$'\t'"STATUS"$'\t'"IMAGE"$'\t'"PORT"
 rows=()
 
 for ((i=0; i<apps_count; i++)); do
@@ -25,12 +25,26 @@ for ((i=0; i<apps_count; i++)); do
     app_file=$(state_get_current "$app_name")
 
     if [[ -f "$app_file" ]]; then
+        # Check if it's a stack service
+        stack_name="-"
+        svc_name="${app_name}"
+        container_name="${app_name//\//_}"
+        if [[ "$app_name" == *"/"* ]]; then
+            stack_name="${app_name%%/*}"
+            svc_name="${app_name#*/}"
+        fi
+
+        # Optional stack filter
+        if [[ -n "$1" && "$1" != "$stack_name" ]]; then
+            continue
+        fi
+
         # Cross-check Docker reality
         active_status="stopped"
         if command -v docker &>/dev/null && docker info &>/dev/null; then
-            if docker ps --format '{{.Names}}' | grep -Eq "^${app_name}$"; then
+            if docker ps --format '{{.Names}}' | grep -Eq "^${container_name}$"; then
                 active_status="running"
-            elif docker ps -a --format '{{.Names}}' | grep -Eq "^${app_name}$"; then
+            elif docker ps -a --format '{{.Names}}' | grep -Eq "^${container_name}$"; then
                 active_status="exited"
             fi
         fi
@@ -43,14 +57,20 @@ for ((i=0; i<apps_count; i++)); do
 
         status=$(json_get "$app_file" ".status")
         image=$(json_get "$app_file" ".image")
+        if [[ -z "$image" || "$image" == "null" ]]; then
+            image=$(json_get "$app_file" ".template")
+        fi
         
         # Get first port from array
         port=$(json_get "$app_file" ".ports[0]")
+        if [[ "$port" == *"{"* ]]; then
+            port=$(echo "$port" | grep -o '"host": *[0-9]*' | grep -o '[0-9]*')
+        fi
         if [[ -z "$port" || "$port" == "null" ]]; then
             port="-"
         fi
         
-        rows+=("${app_name}"$'\t'"${status}"$'\t'"${image}"$'\t'"${port}")
+        rows+=("${stack_name}"$'\t'"${svc_name}"$'\t'"${status}"$'\t'"${image}"$'\t'"${port}")
     fi
 done
 

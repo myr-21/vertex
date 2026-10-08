@@ -42,6 +42,8 @@ show_help() {
     echo "  monitor          Deploy and show monitoring metrics dashboard"
     echo "  backup <app>     Create app backup archive"
     echo "  restore <app>    Restore app backup from archives"
+    echo "  templates        List available application templates"
+    echo "  template show    Show configuration for a template"
     echo "  apply -f <file>  Deploy using an application manifest"
     echo "  version          Print Vertex version details"
     echo
@@ -79,6 +81,16 @@ case "$COMMAND" in
         ;;
     down)
         COMMAND="stop"
+        ;;
+    template)
+        # Handle `vrtx template show <name>` by mapping it to `template_show`
+        if [[ "$1" == "show" ]]; then
+            COMMAND="template_show"
+            shift
+        else
+            log_error "Usage: vrtx template show <template_name>"
+            exit 1
+        fi
         ;;
 esac
 

@@ -14,6 +14,11 @@ fi
 
 APP_NAME="$1"
 
-# Invoke orchestrator
-orchestrator_destroy "$APP_NAME"
-exit $?
+if [[ -d "${VERTEX_STATE_DIR}/desired/${APP_NAME}" ]]; then
+    orchestrator_destroy_manifest "$APP_NAME"
+    exit $?
+else
+    # Invoke orchestrator
+    orchestrator_destroy "$APP_NAME"
+    exit $?
+fi

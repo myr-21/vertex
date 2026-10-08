@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-# Wrapper for Windows docker.exe inside WSL/bash
-docker.exe "$@"
+exec docker.exe "$@"
