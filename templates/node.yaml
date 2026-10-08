@@ -1,0 +1,8 @@
+name: node
+image: node:20-alpine
+ports:
+  - host: 3000
+    container: 3000
+command: node index.js
+network:
+  mode: bridge

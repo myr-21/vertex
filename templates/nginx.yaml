@@ -1,0 +1,7 @@
+name: nginx
+image: nginx:alpine
+ports:
+  - host: 8080
+    container: 80
+network:
+  mode: bridge

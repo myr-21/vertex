@@ -1,0 +1,8 @@
+name: python
+image: python:3.11-slim
+ports:
+  - host: 8000
+    container: 8000
+command: python app.py
+network:
+  mode: bridge
