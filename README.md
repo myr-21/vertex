@@ -165,7 +165,7 @@ SUCCESS <── State Engine <── Resource Manager <── Executor <── T
 
 ---
 
-## Phase 5 Architecture: Declarative Application Manifests
+## Declarative Application Manifests
 
 Vertex introduces `vertex.yaml` to deploy multi-service application stacks. The engine calculates a topological dependency graph to guarantee strict LIFO multi-service transaction rollbacks in case of partial deployment failure.
 
