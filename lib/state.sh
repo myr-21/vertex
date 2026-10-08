@@ -34,6 +34,9 @@ state_create_app() {
     local current_file
     current_file=$(state_get_current "$app_name")
 
+    mkdir -p "$(dirname "$desired_file")"
+    mkdir -p "$(dirname "$current_file")"
+
     # Write input configuration to desired state
     echo "$json_data" > "$desired_file"
     # Set default values for schema and statuses in current state
@@ -76,6 +79,7 @@ state_delete_app() {
 
     # Backup to history directory before deleting
     if [[ -f "$current_file" ]]; then
+        mkdir -p "$(dirname "${history_dir}/${app_name}")"
         cp "$current_file" "${history_dir}/${app_name}-$(date "+%Y%m%d-%H%M%S").json"
         rm -f "$current_file"
     fi

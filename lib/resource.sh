@@ -21,8 +21,9 @@ resource_verify_daemon() {
 # Unified resource manager signature: resource_action <TYPE> <NAME> <ACTION> [OPTIONS...]
 resource_action() {
     local type="$1"
-    local name="$2"
+    local raw_name="$2"
     local action="$3"
+    local name="${raw_name//\//_}"
     shift 3
     local options=("$@")
 
@@ -95,6 +96,7 @@ resource_action() {
                 create)
                     local image="${options[0]}"
                     local port="${options[1]}"
+                    local desired_file="${options[2]}"
                     
                     # 1. Image validation & pull if missing
                     if ! docker image inspect "$image" &>/dev/null; then
@@ -122,16 +124,65 @@ resource_action() {
                     if [[ -z "$exposed_port" ]]; then
                         exposed_port="80"
                     fi
+                    
+                    local extra_args=()
+                    local cmd_args=()
+                    if [[ -f "$desired_file" ]]; then
+                        # Parse environment variables
+                        local env_keys
+                        env_keys=$(jq -r '.environment | keys[]?' "$desired_file" 2>/dev/null)
+                        for key in $env_keys; do
+                            local val
+                            val=$(jq -r ".environment[\"$key\"]" "$desired_file")
+                            extra_args+=("-e" "${key}=${val}")
+                        done
+                        
+                        # Parse custom command if any
+                        local cmd
+                        cmd=$(jq -r '.command // empty' "$desired_file")
+                        if [[ -n "$cmd" ]]; then
+                            read -ra cmd_args <<< "$cmd"
+                        fi
+                        
+                        # Parse volumes
+                        local is_obj_arr
+                        is_obj_arr=$(jq -r '.volumes | type == "array" and (.[0] | type == "object")' "$desired_file" 2>/dev/null || echo "false")
+                        if [[ "$is_obj_arr" == "true" ]]; then
+                            local vol_count
+                            vol_count=$(jq '.volumes | length' "$desired_file")
+                            for ((i=0; i<vol_count; i++)); do
+                                local vname
+                                vname=$(jq -r ".volumes[$i].name" "$desired_file")
+                                local vmount
+                                vmount=$(jq -r ".volumes[$i].mount" "$desired_file")
+                                if [[ -n "$vname" && -n "$vmount" ]]; then
+                                    extra_args+=("-v" "${vname}:${vmount}")
+                                fi
+                            done
+                        else
+                            extra_args+=("-v" "${name}:/data")
+                        fi
+                    else
+                        extra_args+=("-v" "${name}:/data")
+                    fi
+
+                    local net_name
+                    if [[ -f "$desired_file" ]]; then
+                        net_name=$(jq -r '.networks[0] // empty' "$desired_file")
+                    fi
+                    if [[ -z "$net_name" ]]; then
+                        net_name="$name"
+                    fi
 
                     # 5. Start container
                     # Map default volume to /data, bridge network app-name
                     local container_id
                     container_id=$(docker run -d \
                         --name "$name" \
-                        --network "$name" \
-                        -v "${name}:/data" \
+                        --network "$net_name" \
+                        "${extra_args[@]}" \
                         -p "${port}:${exposed_port}" \
-                        "$image" 2>/dev/null) || {
+                        "$image" "${cmd_args[@]}" 2>/dev/null) || {
                         error_msg "${EXIT_RESOURCE_FAILURE}" "Resource" "Failed to run docker container: ${name}"
                         return $?
                     }
